@@ -100,6 +100,34 @@ void confusao_inversa(int height, int width, Pixel (*p)[width])
   }
 }
 
+// DIFUSAO
+// troca as linhas da imagem pelas colunas
+void difusao(int height, int width, Pixel (*origem)[width], Pixel (*destino)[height])
+{ 
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      // as linhas (i, j) da img viram (j, i)
+      destino[j][i] = origem[i][j];
+    }
+  }
+}
+
+// DIFUSAO INVERSA: msm coisa so que ao contrario
+void difusao_inversa(int height, int width, Pixel (*origem)[height], Pixel (*destino)[width])
+{
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      // as linhas (j, i) da img viram (i, j)
+      origem[i][j] = destino[j][i];
+    }
+  }
+}
+
+
 // DIFUSAO (faz um xadrez com a imagem
 void difusao(int height, int width, Pixel (*p)[width]) {
   for (int i = 0; i < height / 2; i++) {
@@ -222,21 +250,6 @@ int main(int argc, char *argv[])
 
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
-
-  // confere componentes dos pixels
-  int iguais = 1;
-  for (int i = 0; i < in.height && iguais; i++) {
-    for (int j = 0; j < in.width; j++) {
-      Pixel *original = *(pin + i) + j;
-      Pixel *recuperado = *(pout + i) + j;
-
-      if (original -> r != recuperado -> r || original -> g != recuperado -> g || original -> b != recuperado -> b) {
-        iguais = 0;
-        break;
-      }
-    }
-  }
-  printf ("recuperacao exata %s\n", iguais ? "SIM" : "NAO");
 
   // grava a imagem final recuperada como PNG para registro
   stbi_write_png("saida.png", out.width, out.height, 3, pout, 0);
