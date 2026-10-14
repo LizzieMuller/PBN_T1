@@ -219,9 +219,11 @@ int main(int argc, char *argv[])
 
   // desfaz a transfusao (recupera a imagem do tam original)
   difusao_inversa(in.height, in.width, pout);
+  stbi_write_png("difusao_inv.png", in.width, in.height, 3, pout, 0);
 
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
+  stbi_write_png("confusao_inv.png", in.width, in.height, 3, pout, 0); // mesma coisa q a saida
 
   // grava a imagem final recuperada como PNG para registro
   stbi_write_png("saida.png", out.width, out.height, 3, pout, 0);
