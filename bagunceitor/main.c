@@ -155,6 +155,7 @@ int main(int argc, char* argv[]) {
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
 
+  //teste
   difusao(in.height, in.width, pin, pout);
   stbi_write_png("difusao.png", out.width, out.height, 3, pout, 0);
 
