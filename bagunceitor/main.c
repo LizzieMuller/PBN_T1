@@ -92,6 +92,34 @@ void confusao_inversa(int height, int width, Pixel (*p)[width]) {
   }
 }
 
+// DIFUSAO
+// troca as linhas da imagem pelas colunas
+void difusao(int height, int width, Pixel (*origem)[width], Pixel (*destino)[height])
+{ 
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      // as linhas (i, j) da img viram (j, i)
+      destino[j][i] = origem[i][j];
+    }
+  }
+}
+
+// DIFUSAO INVERSA: msm coisa so que ao contrario
+void difusao_inversa(int height, int width, Pixel (*origem)[height], Pixel (*destino)[width])
+{
+  for (int i = 0; i < height; i++)
+  {
+    for (int j = 0; j < width; j++)
+    {
+      // as linhas (j, i) da img viram (i, j)
+      origem[i][j] = destino[j][i];
+    }
+  }
+}
+
+
 int main(int argc, char* argv[]) {
   // adaptei essa parte pois estou usando CLion
   char* arquivo_entrada = (argc < 2) ? "predio32.jpg" : argv[1];
@@ -126,6 +154,9 @@ int main(int argc, char* argv[]) {
 
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
+
+  difusao(in.height, in.width, pin, pout);
+  stbi_write_png("difusao.png", out.width, out.height, 3, pout, 0);
 
   // grava a imagem final recuperada como PNG para registro
   stbi_write_png("saida.png", out.width, out.height, 3, pout, 0);
