@@ -100,32 +100,63 @@ void confusao_inversa(int height, int width, Pixel (*p)[width])
   }
 }
 
-// DIFUSAO
-// troca as linhas da imagem pelas colunas
-void difusao(int height, int width, Pixel (*origem)[width], Pixel (*destino)[height])
-{ 
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      // as linhas (i, j) da img viram (j, i)
-      destino[j][i] = origem[i][j];
-    }
-  }
-}
+// DIFUSAO (faz um xadrez com a imagem
+void difusao(int height, int width, Pixel (*p)[width]) {
+  for (int i = 0; i < height / 2; i++) {
+    if (i % 2 == 0) { // pra ter a alternancia, se for par, faz a troca para base e topo (linhas)
+      for (int j = 0; j < width; j++) {
+        Pixel *topo = *(p + i) + j;
+        Pixel *base = *(p + (height - 1 - i)) + j;
 
-// DIFUSAO INVERSA: msm coisa so que ao contrario
-void difusao_inversa(int height, int width, Pixel (*origem)[height], Pixel (*destino)[width])
-{
-  for (int i = 0; i < height; i++)
-  {
-    for (int j = 0; j < width; j++)
-    {
-      // as linhas (j, i) da img viram (i, j)
-      destino[i][j] = origem[j][i];
+        Pixel temp = *topo;
+        *topo = *base;
+        *base = temp;
+      }
     }
   }
-}
+
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width / 2; j++) {
+        if (j % 2 == 0) { // mesma coisa, só que com as colunas, que são esquerda e direita
+          Pixel *esq = *(p + i) + j;
+          Pixel *dir = *(p + i) + (width - 1 - j);
+
+          Pixel temp = *esq;
+          *esq = *dir;
+          *dir = temp;
+        }
+      }
+    }
+ }
+  void difusao_inversa(int height, int width, Pixel (*p)[width]) {
+    // destroca o pixel inteiro nas colunas pares (esquerda e direita)
+    for (int i = 0; i < height; i++) {
+      for (int j = 0; j < width / 2; j++) {
+        if (j % 2 == 0) {
+          Pixel* esq = *(p + i) + j;
+          Pixel* dir = *(p + i) + (width - 1 - j);
+
+          Pixel temp = *esq;
+          *esq = *dir;
+          *dir = temp;
+        }
+      }
+    }
+
+    //destroca o pixel inteiro nas linhas pares (topo e base)
+    for (int i = 0; i < height / 2; i++) {
+      if (i % 2 == 0) {
+        for (int j = 0; j < width; j++) {
+          Pixel* topo = *(p + i) + j;
+          Pixel* base = *(p + (height - 1 - i)) + j;
+
+          Pixel temp = *topo;
+          *topo = *base;
+          *base = temp;
+        }
+      }
+    }
+  }
 
 int main(int argc, char *argv[])
 {
@@ -183,11 +214,11 @@ int main(int argc, char *argv[])
   stbi_write_png("confusao.png", out.width, out.height, 3, pout, 0);
 
   // transpoe a imagem na qual foi aplicada confusao
-  difusao(in.height, in.width, pout, pdifusao);
-  stbi_write_png("difusao.png", in.height, in.width, 3, pdifusao, 0);
+  difusao(in.height, in.width, pout);
+  stbi_write_png("difusao.png", in.width, in.height, 3, pout, 0);
 
   // desfaz a transfusao (recupera a imagem do tam original)
-  difusao_inversa(in.height, in.width, pdifusao, pout);
+  difusao_inversa(in.height, in.width, pout);
 
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
