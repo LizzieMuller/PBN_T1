@@ -59,6 +59,7 @@ void load(char *name, Img *pic);
 // minha ideia era usar modulo dessas operacoes, mas como
 // estamos usando unsigned char, ja faz automaticamente o modulo
 
+
 void confusao(int height, int width, Pixel (*p)[width])
 {
   for (int i = 0; i < height; i++)
@@ -135,7 +136,7 @@ int main(int argc, char *argv[])
   load(arquivo_entrada, &in);
 
   // Exibe as dimensões na tela, para conferência
-  printf("Origem   : %s %d x %d\n", argv[1], in.width, in.height);
+  printf("Origem   : %s %d x %d\n", arquivo_entrada, in.width, in.height);
 
   printf("Processando...\n");
 
@@ -143,12 +144,29 @@ int main(int argc, char *argv[])
   int tam = in.width * in.height;
   out = in;
   out.pixels = malloc(tam * sizeof(Pixel));
+
+  // verificar depois dos mallocs se tem ou nao tem memoria ( para refinamento do programa )
+  if (out.pixels == NULL) {
+    fprintf(stderr, "ERRO - sem memoria para imagem de saida!\n");
+    stbi_image_free(in.pixels);
+    return 1;
+  }
+
   memset(out.pixels, 0, tam * sizeof(Pixel));
 
   Pixel(*pin)[in.width] = (Pixel(*)[in.width])in.pixels;
   Pixel(*pout)[in.width] = (Pixel(*)[in.width])out.pixels;
 
   Pixel *difusao_pixels = malloc(tam * sizeof(Pixel));
+
+  // mesma coisa do outro malloc ( verifica se tem ou nao memoria )
+  if (difusao_pixels == NULL) {
+    fprintf(stderr, "ERRO - sem memoria para a difusao!\n");
+    stbi_image_free(in.pixels);
+    free(out.pixels);
+    return 1;
+  }
+
   Pixel(*pdifusao)[in.height] = (Pixel(*)[in.height])difusao_pixels;
 
   // 1. Liga 'pin' e 'pout' copiando a matriz com aritmética de ponteiros
@@ -164,15 +182,37 @@ int main(int argc, char *argv[])
   confusao(in.height, in.width, pout);
   stbi_write_png("confusao.png", out.width, out.height, 3, pout, 0);
 
+  // transpoe a imagem na qual foi aplicada confusao
+  difusao(in.height, in.width, pout, pdifusao);
+  stbi_write_png("difusao.png", in.height, in.width, 3, pdifusao, 0);
+
+  // desfaz a transfusao (recupera a imagem do tam original)
+  difusao_inversa(in.height, in.width, pdifusao, pout);
+
   // desaplica a confusao na matriz pout (recupera a imagem original)
   confusao_inversa(in.height, in.width, pout);
+
+  // confere componentes dos pixels
+  int iguais = 1;
+  for (int i = 0; i < in.height && iguais; i++) {
+    for (int j = 0; j < in.width; j++) {
+      Pixel *original = *(pin + i) + j;
+      Pixel *recuperado = *(pout + i) + j;
+
+      if (original -> r != recuperado -> r || original -> g != recuperado -> g || original -> b != recuperado -> b) {
+        iguais = 0;
+        break;
+      }
+    }
+  }
+  printf ("recuperacao exata %s\n", iguais ? "SIM" : "NAO");
 
   // grava a imagem final recuperada como PNG para registro
   stbi_write_png("saida.png", out.width, out.height, 3, pout, 0);
 
   // aplica a difusao na matriz pout (e salva para ver o efeito)
-  difusao(in.height, in.width, pin, pdifusao);
-  stbi_write_png("difusao.png", in.height, in.width, 3, pdifusao, 0);
+  // difusao(in.height, in.width, pin, pdifusao);
+  // stbi_write_png("difusao.png", in.height, in.width, 3, pdifusao, 0);
 
   free(in.pixels);
   free(out.pixels);
@@ -183,7 +223,7 @@ int main(int argc, char *argv[])
 void load(char *name, Img *pic)
 {
   pic->pixels =
-      (Pixel *)stbi_load(name, &pic->width, &pic->height, &pic->channels, 0);
+      (Pixel *)stbi_load(name, &pic->width, &pic->height, &pic->channels, 3); // de 0 para 3 pq eh rbg (3) ?
   if (!pic->pixels)
   {
     printf("Erro de leitura: %s\n", stbi_failure_reason());
